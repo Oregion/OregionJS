@@ -1,0 +1,17 @@
+{
+  "name": "oregionjs",
+  "version": "1.0.0",
+  "private": true,
+  "author": {
+    "name": "Ibrahim Studio",
+    "email": "touch@ibrahimstudio.com",
+    "homepage": "https://ibrahimstudio.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Oregion/OregionJS"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
