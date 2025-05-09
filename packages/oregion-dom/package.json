@@ -1,0 +1,41 @@
+{
+  "name": "oregion-dom",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Ibrahim Studio",
+    "email": "touch@ibrahimstudio.com",
+    "homepage": "https://ibrahimstudio.com"
+  },
+  "keywords": [
+    "virtual DOM",
+    "oregion",
+    "javascript"
+  ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Oregion/OregionJS.git",
+    "directory": "packages/oregion-dom"
+  },
+  "bugs": {
+    "url": "https://github.com/Oregion/OregionJS/issues"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "peerDependencies": {
+    "oregion": "1.0.0"
+  },
+  "dependencies": {
+    "oregion": "1.0.0"
+  }
+}
