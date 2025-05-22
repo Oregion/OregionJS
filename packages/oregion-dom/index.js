@@ -1,7 +1,7 @@
 import { globalState, resetHookState } from "oregion";
 
 function createDom(fiber) {
-  if (fiber.type === "TEXT_ELEMENT") return document.createTextNode("");
+  if (fiber.type === "TEXT_ELEMENT") return document.createTextNode(fiber.props.nodeValue || "");
   if (fiber.type === "FRAGMENT") return null;
   const dom = document.createElement(fiber.type);
   updateDom(dom, {}, fiber.props);
