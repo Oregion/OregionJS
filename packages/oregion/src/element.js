@@ -68,3 +68,24 @@ export function ErrorBoundary({ fallback, children }) {
   }
   return children;
 }
+
+/**
+ * Memoizes a component to prevent unnecessary re-renders.
+ * @param {Function} Component - The component to memoize.
+ * @returns {Function} The memoized component.
+ */
+export function memo(Component) {
+  return function MemoizedComponent(props) {
+    const fiber = globalState.wipFiber;
+    const oldFiber = fiber.alternate;
+    if (oldFiber && oldFiber.type === Component) {
+      const oldProps = oldFiber.props;
+      const propsChanged = Object.keys(props).some((key) => !Object.is(props[key], oldProps[key]));
+      if (!propsChanged) {
+        fiber.skipRender = true;
+        return oldFiber.props.children;
+      }
+    }
+    return Component(props);
+  };
+}
