@@ -5,6 +5,7 @@
 import { globalState, resetHookState } from "../../oregion/src/state";
 import { createDom, updateDom } from "./dom";
 import { reconcileChildren } from "./fiber";
+import { scheduleTask } from "../../oregion/src/scheduler";
 
 /**
  * Commits the work-in-progress tree to the DOM.
@@ -88,24 +89,53 @@ function commitDeletion(fiber, domParent) {
 }
 
 /**
- * The work loop for processing fibers.
+ * The work loop for processing fibers with concurrent rendering.
  * @param {Object} deadline - The requestIdleCallback deadline.
  */
 export function workLoop(deadline) {
   let shouldYield = false;
   while (globalState.nextUnitOfWork && !shouldYield) {
-    globalState.nextUnitOfWork = performUnitOfWork(globalState.nextUnitOfWork);
-    shouldYield = deadline.timeRemaining() < 1;
+    try {
+      globalState.nextUnitOfWork = performUnitOfWork(globalState.nextUnitOfWork);
+      shouldYield = deadline.timeRemaining() < 1;
+    } catch (error) {
+      if (error instanceof Promise) {
+        globalState.nextUnitOfWork.suspended = true;
+        error.then(() => {
+          globalState.nextUnitOfWork.suspended = false;
+          scheduleTask(() => {
+            globalState.wipRoot = {
+              dom: globalState.currentRoot.dom,
+              props: globalState.currentRoot.props,
+              alternate: globalState.currentRoot,
+            };
+            globalState.nextUnitOfWork = globalState.wipRoot;
+            globalState.deletions = [];
+          }, 0); // High priority
+        });
+        globalState.nextUnitOfWork = null; // Pause until promise resolves
+      } else {
+        const boundary = findErrorBoundary(globalState.nextUnitOfWork, error);
+        if (boundary) {
+          boundary.error = error;
+          globalState.wipRoot = { ...globalState.currentRoot, alternate: globalState.currentRoot };
+          globalState.nextUnitOfWork = globalState.wipRoot;
+          globalState.deletions = [];
+        } else {
+          throw error;
+        }
+      }
+    }
   }
 
   if (!globalState.nextUnitOfWork && globalState.wipRoot) commitRoot();
 
-  requestIdleCallback(workLoop);
+  if (globalState.nextUnitOfWork || globalState.wipRoot) {
+    scheduleTask(() => workLoop({ timeRemaining: () => 50 }), 1); // Normal priority
+  }
 }
 
-const requestIdleCallback = window.requestIdleCallback || ((cb) => setTimeout(() => cb({ timeRemaining: () => 50 }), 1));
-
-requestIdleCallback(workLoop);
+scheduleTask(() => workLoop({ timeRemaining: () => 50 }), 1);
 
 /**
  * Processes a unit of work in the fiber tree.
@@ -177,6 +207,10 @@ function updateFunctionComponent(fiber) {
     const props = isBoundary ? { ...fiber.props, error: fiber.error } : fiber.props;
     child = fiber.type(props);
   } catch (error) {
+    if (error instanceof Promise) {
+      fiber.suspended = true;
+      throw error; // Let workLoop handle suspense
+    }
     const boundary = findErrorBoundary(fiber, error);
     if (boundary) {
       boundary.error = error;
