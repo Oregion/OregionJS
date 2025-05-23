@@ -3,6 +3,7 @@
  * Hook implementations for Oregion.
  */
 import { globalState } from "./state";
+import { scheduleTask } from "./scheduler";
 
 /**
  * Creates a hook object with consistent structure.
@@ -400,6 +401,23 @@ export function use(resource) {
     return useContext(resource); // Handle context
   }
   return resource; // Direct value
+}
+
+/**
+ * Marks a state update as a transition.
+ * @param {Function} callback - The callback to run in a transition.
+ */
+export function startTransition(callback) {
+  scheduleTask(() => {
+    callback();
+    globalState.wipRoot = {
+      dom: globalState.currentRoot.dom,
+      props: globalState.currentRoot.props,
+      alternate: globalState.currentRoot,
+    };
+    globalState.nextUnitOfWork = globalState.wipRoot;
+    globalState.deletions = [];
+  }, 1); // Normal priority
 }
 
 /**
