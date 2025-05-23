@@ -128,3 +128,34 @@ export function StrictMode({ children }) {
   }
   return children;
 }
+
+/**
+ * ViewTransition component for smooth DOM transitions.
+ * @param {Object} props - The component props.
+ * @param {Array} props.children - The child elements.
+ * @returns {Array} The child elements.
+ */
+export function ViewTransition({ children }) {
+  if (typeof document !== "undefined" && document.startViewTransition) {
+    document.startViewTransition(() => {
+      globalState.wipRoot = {
+        dom: globalState.currentRoot.dom,
+        props: globalState.currentRoot.props,
+        alternate: globalState.currentRoot,
+      };
+      globalState.nextUnitOfWork = globalState.wipRoot;
+      globalState.deletions = [];
+    });
+  } else {
+    // Fallback: simple fade animation
+    const fiber = globalState.wipFiber;
+    if (fiber.dom) {
+      fiber.dom.style.transition = "opacity 0.3s";
+      fiber.dom.style.opacity = "0";
+      setTimeout(() => {
+        fiber.dom.style.opacity = "1";
+      }, 0);
+    }
+  }
+  return children;
+}
