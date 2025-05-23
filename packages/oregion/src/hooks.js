@@ -9,8 +9,8 @@ import { globalState } from "./state";
  * @param {Object} options - Hook options (state, deps, etc.).
  * @returns {Object} The hook object.
  */
-function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic }) {
-  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic };
+function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error }) {
+  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error };
   globalState.wipFiber.hooks.push(hook);
   globalState.hookIndex++;
   return hook;
@@ -186,7 +186,6 @@ export function useContext(context) {
     value: oldHook ? oldHook.value : context._currentValue,
   });
 
-  // Subscribe to context changes
   if (!oldHook) {
     context._subscribers.add(hook);
     hook.cleanup = () => context._subscribers.delete(hook);
@@ -361,6 +360,31 @@ export function useDebugValue(value, format) {
     const formatted = format ? format(value) : value;
     createHook({ value: formatted });
   }
+}
+
+/**
+ * Handles errors within a component.
+ * @param {Function} errorHandler - Function to handle the error.
+ * @returns {Function} Function to throw errors to the nearest ErrorBoundary.
+ */
+export function useErrorBoundary(errorHandler) {
+  const hook = createHook({
+    error: null,
+  });
+
+  const handleError = (error) => {
+    hook.error = error;
+    errorHandler(error);
+    globalState.wipRoot = {
+      dom: globalState.currentRoot.dom,
+      props: globalState.currentRoot.props,
+      alternate: globalState.currentRoot,
+    };
+    globalState.nextUnitOfWork = globalState.wipRoot;
+    globalState.deletions = [];
+  };
+
+  return handleError;
 }
 
 /**

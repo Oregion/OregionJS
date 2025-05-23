@@ -6,6 +6,7 @@ import { globalState, resetHookState } from "../../oregion/src/state";
 import { createDom, updateDom } from "./dom";
 import { reconcileChildren } from "./fiber";
 import { scheduleTask } from "../../oregion/src/scheduler";
+import { ErrorBoundary } from "../../oregion/src/element";
 
 /**
  * Commits the work-in-progress tree to the DOM.
@@ -25,7 +26,7 @@ export function commitRoot() {
  * @param {Object} fiber - The fiber to commit.
  */
 function commitWork(fiber) {
-  if (!fiber) return;
+  if (!fiber || fiber.skipRender) return;
 
   let domParentFiber = fiber.parent;
   while (domParentFiber && !domParentFiber.dom) domParentFiber = domParentFiber.parent;
@@ -53,7 +54,7 @@ function commitWork(fiber) {
  * @param {string} effectType - The type of effect to run (insertion, layout, effect).
  */
 function runEffects(fiber, effectType) {
-  if (!fiber) return;
+  if (!fiber || fiber.skipRender) return;
 
   if (fiber.hooks) {
     fiber.hooks.forEach((hook) => {
@@ -143,6 +144,16 @@ scheduleTask(() => workLoop({ timeRemaining: () => 50 }), 1);
  * @returns {Object|null} The next fiber to process.
  */
 function performUnitOfWork(fiber) {
+  if (fiber.skipRender) {
+    if (fiber.child) return fiber.child;
+    let nextFiber = fiber;
+    while (nextFiber) {
+      if (nextFiber.sibling) return nextFiber.sibling;
+      nextFiber = nextFiber.parent;
+    }
+    return null;
+  }
+
   const isFunctionComponent = typeof fiber.type === "function";
   if (isFunctionComponent) updateFunctionComponent(fiber);
   else updateHostComponent(fiber);
@@ -181,7 +192,7 @@ function findErrorBoundary(fiber, error) {
   let current = fiber.parent;
   while (current) {
     const Component = current.type;
-    if (typeof Component === "function" && Component.getDerivedError) {
+    if (typeof Component === "function" && (Component === ErrorBoundary || Component.getDerivedError)) {
       if (typeof Component.onErrorCaught === "function") {
         Component.onErrorCaught(error, {
           componentStack: getComponentStack(current),
@@ -203,7 +214,7 @@ function updateFunctionComponent(fiber) {
   resetHookState(fiber);
   let child;
   try {
-    const isBoundary = fiber.type.getDerivedError && fiber.error;
+    const isBoundary = fiber.type === ErrorBoundary || (fiber.type.getDerivedError && fiber.error);
     const props = isBoundary ? { ...fiber.props, error: fiber.error } : fiber.props;
     child = fiber.type(props);
   } catch (error) {

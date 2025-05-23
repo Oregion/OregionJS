@@ -53,3 +53,18 @@ export function Suspense({ fallback, children }) {
   }
   return children;
 }
+
+/**
+ * ErrorBoundary component for catching errors in the child tree.
+ * @param {Object} props - The component props.
+ * @param {Object} props.fallback - The fallback UI to render on error.
+ * @param {Array} props.children - The child elements.
+ * @returns {Object} The fallback or children based on error state.
+ */
+export function ErrorBoundary({ fallback, children }) {
+  const fiber = globalState.wipFiber;
+  if (fiber.error) {
+    return fallback;
+  }
+  return children;
+}

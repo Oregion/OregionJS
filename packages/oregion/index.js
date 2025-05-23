@@ -2,9 +2,9 @@
  * @module oregion
  * Public API for the Oregion framework.
  */
-import { createElement, Fragment, Suspense } from "./src/element";
+import { createElement, Fragment, Suspense, ErrorBoundary } from "./src/element";
 import { createContext } from "./src/context";
-import { useState, useEffect, useLayoutEffect, useInsertionEffect, useRef, useImperativeHandle, useMemo, useCallback, useReducer, useContext, useDeferredValue, useTransition, useActionState, useOptimistic, useSyncExternalStore, useId, useDebugValue, useLocalStorage, useDebounce, useFetch } from "./src/hooks";
+import { useState, useEffect, useLayoutEffect, useInsertionEffect, useRef, useImperativeHandle, useMemo, useCallback, useReducer, useContext, useDeferredValue, useTransition, useActionState, useOptimistic, useSyncExternalStore, useId, useDebugValue, useErrorBoundary, useLocalStorage, useDebounce, useFetch } from "./src/hooks";
 
 export const Hooks = {
   useState,
@@ -24,6 +24,7 @@ export const Hooks = {
   useSyncExternalStore,
   useId,
   useDebugValue,
+  useErrorBoundary,
   useLocalStorage,
   useDebounce,
   useFetch,
@@ -32,6 +33,7 @@ export const Hooks = {
 export const Components = {
   Fragment,
   Suspense,
+  ErrorBoundary,
 };
 
 export const APIs = {
