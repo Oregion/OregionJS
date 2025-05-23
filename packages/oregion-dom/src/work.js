@@ -7,6 +7,7 @@ import { createDom, updateDom } from "./dom";
 import { reconcileChildren } from "./fiber";
 import { scheduleTask } from "../../oregion/src/scheduler";
 import { ErrorBoundary } from "../../oregion/src/element";
+import { captureOwnerStack } from "../../oregion/src/utils";
 
 /**
  * Commits the work-in-progress tree to the DOM.
@@ -195,7 +196,7 @@ function findErrorBoundary(fiber, error) {
     if (typeof Component === "function" && (Component === ErrorBoundary || Component.getDerivedError)) {
       if (typeof Component.onErrorCaught === "function") {
         Component.onErrorCaught(error, {
-          componentStack: getComponentStack(current),
+          componentStack: captureOwnerStack(current),
           componentName: Component.name || "Anonymous",
         });
       }
@@ -216,6 +217,10 @@ function updateFunctionComponent(fiber) {
   try {
     const isBoundary = fiber.type === ErrorBoundary || (fiber.type.getDerivedError && fiber.error);
     const props = isBoundary ? { ...fiber.props, error: fiber.error } : fiber.props;
+    if (fiber.strictMode && process.env.NODE_ENV !== "production") {
+      // Double-render in StrictMode for dev checks
+      fiber.type(props); // First render (discarded)
+    }
     child = fiber.type(props);
   } catch (error) {
     if (error instanceof Promise) {
