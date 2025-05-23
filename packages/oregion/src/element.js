@@ -3,6 +3,7 @@
  * Element creation utilities for Oregion.
  */
 import { globalState } from "./state";
+import { logProfile } from "./profiler";
 
 /**
  * Creates a text element for the virtual DOM.
@@ -88,4 +89,28 @@ export function memo(Component) {
     }
     return Component(props);
   };
+}
+
+/**
+ * Profiler component for measuring rendering performance.
+ * @param {Object} props - The component props.
+ * @param {string} props.id - The profiler ID.
+ * @param {Function} props.onRender - Callback to report rendering stats.
+ * @param {Array} props.children - The child elements.
+ * @returns {Array} The child elements.
+ */
+export function Profiler({ id, onRender, children }) {
+  const fiber = globalState.wipFiber;
+  if (process.env.NODE_ENV !== "production") {
+    const startTime = performance.now();
+    const phase = fiber.alternate ? "update" : "mount";
+    const result = children;
+    const actualDuration = performance.now() - startTime;
+    logProfile(id, phase, actualDuration, startTime);
+    if (onRender) {
+      onRender(id, phase, actualDuration, startTime, fiber._debugName);
+    }
+    return result;
+  }
+  return children;
 }
