@@ -362,3 +362,81 @@ export function useDebugValue(value, format) {
     createHook({ value: formatted });
   }
 }
+
+/**
+ * Persists state in localStorage.
+ * @param {string} key - The storage key.
+ * @param {any} initialValue - The initial value.
+ * @returns {[any, Function]} The state and setter function.
+ */
+export function useLocalStorage(key, initialValue) {
+  const [state, setState] = useState(() => {
+    if (typeof window === "undefined") return initialValue;
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+    } catch (error) {
+      console.error(`Error saving to localStorage: ${error}`);
+    }
+  }, [state]);
+
+  return [state, setState];
+}
+
+/**
+ * Debounces a value to prevent frequent updates.
+ * @param {any} value - The value to debounce.
+ * @param {number} delay - The debounce delay in milliseconds.
+ * @returns {any} The debounced value.
+ */
+export function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+/**
+ * Fetches data with suspense support.
+ * @param {string} url - The URL to fetch.
+ * @param {Object} [options] - Fetch options.
+ * @returns {any} The fetched data.
+ */
+export function useFetch(url, options = {}) {
+  const cache = useMemo(() => new Map(), []);
+  const cacheKey = JSON.stringify({ url, options });
+
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+
+  const promise = fetch(url, options)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      cache.set(cacheKey, data);
+      return data;
+    });
+
+  promise.catch((error) => {
+    cache.set(cacheKey, { error });
+  });
+
+  throw promise; // Trigger suspense
+}
