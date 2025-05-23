@@ -9,8 +9,8 @@ import { globalState } from "./state";
  * @param {Object} options - Hook options (state, deps, etc.).
  * @returns {Object} The hook object.
  */
-function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error }) {
-  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error };
+function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource }) {
+  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource };
   globalState.wipFiber.hooks.push(hook);
   globalState.hookIndex++;
   return hook;
@@ -385,6 +385,21 @@ export function useErrorBoundary(errorHandler) {
   };
 
   return handleError;
+}
+
+/**
+ * Reads a resource (context, promise, or value) in suspense.
+ * @param {any} resource - The resource to read.
+ * @returns {any} The resource value.
+ */
+export function use(resource) {
+  if (resource instanceof Promise) {
+    throw resource; // Trigger suspense
+  }
+  if (resource && resource._currentValue !== undefined) {
+    return useContext(resource); // Handle context
+  }
+  return resource; // Direct value
 }
 
 /**
