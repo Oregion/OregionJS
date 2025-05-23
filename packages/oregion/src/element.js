@@ -2,6 +2,7 @@
  * @module oregion/element
  * Element creation utilities for Oregion.
  */
+import { globalState } from "./state";
 
 /**
  * Creates a text element for the virtual DOM.
@@ -37,3 +38,18 @@ export function createElement(type, props, ...children) {
 
 /** @type {string} Fragment component identifier. */
 export const Fragment = "FRAGMENT";
+
+/**
+ * Suspense component for handling asynchronous rendering.
+ * @param {Object} props - The component props.
+ * @param {Object} props.fallback - The fallback UI to render while suspended.
+ * @param {Array} props.children - The child elements.
+ * @returns {Object} The fallback or children based on suspension state.
+ */
+export function Suspense({ fallback, children }) {
+  const fiber = globalState.wipFiber;
+  if (fiber.suspended) {
+    return fallback;
+  }
+  return children;
+}
