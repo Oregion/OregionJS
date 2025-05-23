@@ -497,3 +497,24 @@ export function useFetch(url, options = {}) {
 
   throw promise; // Trigger suspense
 }
+
+/**
+ * Caches a resource for suspense.
+ * @param {Function} resourceFn - The function to compute the resource.
+ * @returns {any} The cached resource.
+ */
+export function cache(resourceFn) {
+  const cacheMap = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cacheMap.has(key)) {
+      return cacheMap.get(key);
+    }
+    const promise = resourceFn(...args).then((result) => {
+      cacheMap.set(key, result);
+      return result;
+    });
+    cacheMap.set(key, promise);
+    throw promise;
+  };
+}
