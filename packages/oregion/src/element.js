@@ -114,3 +114,17 @@ export function Profiler({ id, onRender, children }) {
   }
   return children;
 }
+
+/**
+ * StrictMode component for enabling development-time checks.
+ * @param {Object} props - The component props.
+ * @param {Array} props.children - The child elements.
+ * @returns {Array} The child elements.
+ */
+export function StrictMode({ children }) {
+  if (process.env.NODE_ENV !== "production") {
+    const fiber = globalState.wipFiber;
+    fiber.strictMode = true; // Mark fiber for double-rendering in dev
+  }
+  return children;
+}
