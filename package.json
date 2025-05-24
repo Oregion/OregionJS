@@ -1,10 +1,10 @@
 {
-  "name": "oregionjs",
+  "name": "zepshjs",
   "version": "1.0.0",
   "private": true,
   "author": {
     "name": "Ibrahim Studio",
-    "email": "touch@ibrahimstudio.com",
+    "email": "hello@ibrahimstudio.com",
     "homepage": "https://ibrahimstudio.com"
   },
   "workspaces": [
@@ -12,12 +12,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Oregion/OregionJS"
+    "url": "https://github.com/zepsh/ZepshJS"
   },
   "scripts": {
     "test": "jest --coverage",
-    "test:core": "jest packages/oregion/__tests__",
-    "test:dom": "jest packages/oregion-dom/__tests__"
+    "test:core": "jest packages/zepsh/__tests__",
+    "test:dom": "jest packages/zepsh-dom/__tests__"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.27.2",
