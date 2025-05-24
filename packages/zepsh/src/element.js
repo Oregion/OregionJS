@@ -199,3 +199,20 @@ export function ViewTransition({ children }) {
   }
   return children;
 }
+
+/**
+ * Activity component for managing visibility in concurrent rendering.
+ * @param {Object} props - The component props.
+ * @param {string} props.mode - The visibility mode ("visible" or "hidden").
+ * @param {Array} props.children - The child elements.
+ * @returns {Array|null} The children or null based on mode.
+ */
+export function Activity({ mode, children }) {
+  const fiber = globalState.wipFiber;
+  if (mode === "hidden") {
+    fiber.hidden = true; // Mark fiber as hidden, preserve state
+    return null;
+  }
+  fiber.hidden = false;
+  return children;
+}
