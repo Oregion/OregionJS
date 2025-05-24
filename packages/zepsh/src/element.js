@@ -34,6 +34,29 @@ export function createElement(type, props, ...children) {
       ...props,
       children: children.map((child) => (typeof child === "object" ? child : createTextElement(child))),
     },
+    $$typeof: Symbol.for("zepsh.element"),
+  };
+}
+
+/**
+ * Clones an element with new props.
+ * @param {Object} element - The element to clone.
+ * @param {Object} props - New props to merge.
+ * @param {...any} children - New children (optional).
+ * @returns {Object} The cloned element.
+ */
+export function cloneElement(element, props, ...children) {
+  if (!isValidElement(element)) {
+    throw new Error("cloneElement expects a valid Zepsh element");
+  }
+  return {
+    type: element.type,
+    props: {
+      ...element.props,
+      ...props,
+      children: children.length ? children.map((child) => (typeof child === "object" ? child : createTextElement(child))) : element.props.children,
+    },
+    $$typeof: Symbol.for("zepsh.element"),
   };
 }
 
