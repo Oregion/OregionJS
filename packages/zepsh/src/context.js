@@ -1,6 +1,6 @@
 /**
- * @module oregion/context
- * Context creation for Oregion.
+ * @module zepsh/context
+ * Context creation for Zepsh.
  */
 
 /**

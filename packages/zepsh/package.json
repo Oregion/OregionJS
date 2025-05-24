@@ -1,16 +1,16 @@
 {
-  "name": "oregion",
+  "name": "zepsh",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "license": "MIT",
   "author": {
     "name": "Ibrahim Studio",
-    "email": "touch@ibrahimstudio.com",
+    "email": "hello@ibrahimstudio.com",
     "homepage": "https://ibrahimstudio.com"
   },
   "keywords": [
-    "oregion",
+    "zepsh",
     "framework",
     "javascript"
   ],
@@ -23,11 +23,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Oregion/OregionJS.git",
-    "directory": "packages/oregion"
+    "url": "git+https://github.com/zepsh/ZepshJS.git",
+    "directory": "packages/zepsh"
   },
   "bugs": {
-    "url": "https://github.com/Oregion/OregionJS/issues"
+    "url": "https://github.com/zepsh/ZepshJS/issues"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

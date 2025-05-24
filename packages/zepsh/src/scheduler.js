@@ -1,6 +1,6 @@
 /**
- * @module oregion/scheduler
- * Lightweight scheduler for concurrent rendering in Oregion.
+ * @module zepsh/scheduler
+ * Lightweight scheduler for concurrent rendering in Zepsh.
  */
 
 /**

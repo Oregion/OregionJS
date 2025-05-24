@@ -1,6 +1,6 @@
 /**
- * @module oregion/utils
- * Utility functions for Oregion.
+ * @module zepsh/utils
+ * Utility functions for Zepsh.
  */
 
 /**

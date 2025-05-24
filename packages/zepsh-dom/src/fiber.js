@@ -1,8 +1,8 @@
 /**
- * @module oregion-dom/fiber
- * Fiber creation and reconciliation for OregionDOM.
+ * @module zepsh-dom/fiber
+ * Fiber creation and reconciliation for ZepshDOM.
  */
-import { globalState } from "../../oregion/src/state";
+import { globalState } from "../../zepsh/src/state";
 
 /**
  * Creates a fiber object.

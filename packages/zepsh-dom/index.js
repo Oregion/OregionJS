@@ -1,9 +1,9 @@
 /**
- * @module oregion-dom
- * Public API for OregionDOM.
+ * @module zepsh-dom
+ * Public API for ZepshDOM.
  */
 import { createFiber } from "./src/fiber";
-import { globalState } from "../oregion/src/state";
+import { globalState } from "../zepsh/src/state";
 
 /**
  * Renders an element to the DOM.

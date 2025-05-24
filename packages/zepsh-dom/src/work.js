@@ -1,13 +1,13 @@
 /**
- * @module oregion-dom/work
- * Work loop and commit logic for OregionDOM.
+ * @module zepsh-dom/work
+ * Work loop and commit logic for ZepshDOM.
  */
-import { globalState, resetHookState } from "../../oregion/src/state";
+import { globalState, resetHookState } from "../../zepsh/src/state";
 import { createDom, updateDom } from "./dom";
 import { reconcileChildren } from "./fiber";
-import { scheduleTask } from "../../oregion/src/scheduler";
-import { ErrorBoundary } from "../../oregion/src/element";
-import { captureOwnerStack } from "../../oregion/src/utils";
+import { scheduleTask } from "../../zepsh/src/scheduler";
+import { ErrorBoundary } from "../../zepsh/src/element";
+import { captureOwnerStack } from "../../zepsh/src/utils";
 
 /**
  * Commits the work-in-progress tree to the DOM.

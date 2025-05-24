@@ -1,6 +1,6 @@
 /**
- * @module oregion-dom/dom
- * DOM utilities for OregionDOM.
+ * @module zepsh-dom/dom
+ * DOM utilities for ZepshDOM.
  */
 
 /**

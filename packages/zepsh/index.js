@@ -1,6 +1,6 @@
 /**
- * @module oregion
- * Public API for the Oregion framework.
+ * @module zepsh
+ * Public API for the Zepsh framework.
  */
 import { createElement, Fragment, Suspense, ErrorBoundary, memo, Profiler, StrictMode, ViewTransition } from "./src/element";
 import { createContext } from "./src/context";

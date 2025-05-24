@@ -1,9 +1,9 @@
 /**
- * @module oregion/testing
- * Testing utilities for Oregion.
+ * @module zepsh/testing
+ * Testing utilities for Zepsh.
  */
 import { globalState } from "./state";
-import { commitRoot, workLoop } from "../../oregion-dom/src/work";
+import { commitRoot, workLoop } from "../../zepsh-dom/src/work";
 
 /**
  * Simulates a rendering cycle for testing, flushing all effects and updates.

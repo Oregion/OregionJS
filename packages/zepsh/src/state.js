@@ -1,9 +1,9 @@
 /**
- * @module oregion/state
- * Internal state management for Oregion.
+ * @module zepsh/state
+ * Internal state management for Zepsh.
  */
 
-/** @type {Object} Global state for the Oregion framework. */
+/** @type {Object} Global state for the Zepsh framework. */
 const globalState = {
   wipFiber: null,
   hookIndex: 0,

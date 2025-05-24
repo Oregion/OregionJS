@@ -1,6 +1,6 @@
 /**
- * @module oregion/lazy
- * Lazy loading utilities for Oregion.
+ * @module zepsh/lazy
+ * Lazy loading utilities for Zepsh.
  */
 import { globalState } from "./state";
 

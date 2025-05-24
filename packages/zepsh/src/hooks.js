@@ -1,6 +1,6 @@
 /**
- * @module oregion/hooks
- * Hook implementations for Oregion.
+ * @module zepsh/hooks
+ * Hook implementations for Zepsh.
  */
 import { globalState } from "./state";
 import { scheduleTask } from "./scheduler";

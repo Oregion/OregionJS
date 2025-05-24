@@ -1,6 +1,6 @@
 /**
- * @module oregion/element
- * Element creation utilities for Oregion.
+ * @module zepsh/element
+ * Element creation utilities for Zepsh.
  */
 import { globalState } from "./state";
 import { logProfile } from "./profiler";

@@ -1,17 +1,17 @@
 {
-  "name": "oregion-dom",
+  "name": "zepsh-dom",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "license": "MIT",
   "author": {
     "name": "Ibrahim Studio",
-    "email": "touch@ibrahimstudio.com",
+    "email": "hello@ibrahimstudio.com",
     "homepage": "https://ibrahimstudio.com"
   },
   "keywords": [
     "virtual DOM",
-    "oregion",
+    "zepsh",
     "javascript"
   ],
   "files": [
@@ -23,19 +23,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Oregion/OregionJS.git",
-    "directory": "packages/oregion-dom"
+    "url": "git+https://github.com/zepsh/ZepshJS.git",
+    "directory": "packages/zepsh-dom"
   },
   "bugs": {
-    "url": "https://github.com/Oregion/OregionJS/issues"
+    "url": "https://github.com/zepsh/ZepshJS/issues"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "peerDependencies": {
-    "oregion": "1.0.0"
+    "zepsh": "1.0.0"
   },
   "dependencies": {
-    "oregion": "1.0.0"
+    "zepsh": "1.0.0"
   }
 }

@@ -1,5 +1,5 @@
 /**
- * @module oregion/profiler
+ * @module zepsh/profiler
  * Profiler utilities for measuring rendering performance in development.
  */
 
@@ -17,8 +17,8 @@ export function logProfile(id, phase, actualDuration, startTime) {
   if (process.env.NODE_ENV !== "production") {
     if (!profiles.has(id)) profiles.set(id, []);
     profiles.get(id).push({ id, phase, actualDuration, startTime });
-    if (typeof window !== "undefined" && window.__OREGION_DEVTOOLS__) {
-      window.__OREGION_DEVTOOLS__.profiles = profiles;
+    if (typeof window !== "undefined" && window.__ZEPSH_DEVTOOLS__) {
+      window.__ZEPSH_DEVTOOLS__.profiles = profiles;
     }
   }
 }
