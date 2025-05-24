@@ -19,3 +19,20 @@ export function captureOwnerStack(fiber) {
   }
   return stack.reverse().join(" > ");
 }
+
+/**
+ * Merges multiple refs into a single callback ref.
+ * @param {Array<Function|Object>} refs - Array of refs (callback or RefObject).
+ * @returns {Function} A callback ref that applies all refs.
+ */
+export function mergeRefs(refs) {
+  return (node) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref && typeof ref === "object" && "current" in ref) {
+        ref.current = node;
+      }
+    });
+  };
+}
