@@ -60,6 +60,15 @@ export function cloneElement(element, props, ...children) {
   };
 }
 
+/**
+ * Checks if an object is a valid Zepsh element.
+ * @param {any} object - The object to check.
+ * @returns {boolean} True if the object is a valid element.
+ */
+export function isValidElement(object) {
+  return object && typeof object === "object" && object.$$typeof === Symbol.for("zepsh.element");
+}
+
 /** @type {string} Fragment component identifier. */
 export const Fragment = "FRAGMENT";
 
