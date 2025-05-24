@@ -34,7 +34,47 @@ export function createElement(type, props, ...children) {
       ...props,
       children: children.map((child) => (typeof child === "object" ? child : createTextElement(child))),
     },
+    $$typeof: Symbol.for("zepsh.element"),
   };
+}
+
+/**
+ * Clones an element with new props.
+ * @param {Object} element - The element to clone.
+ * @param {Object} props - New props to merge.
+ * @param {...any} children - New children (optional).
+ * @returns {Object} The cloned element.
+ */
+export function cloneElement(element, props, ...children) {
+  if (!isValidElement(element)) {
+    throw new Error("cloneElement expects a valid Zepsh element");
+  }
+  return {
+    type: element.type,
+    props: {
+      ...element.props,
+      ...props,
+      children: children.length ? children.map((child) => (typeof child === "object" ? child : createTextElement(child))) : element.props.children,
+    },
+    $$typeof: Symbol.for("zepsh.element"),
+  };
+}
+
+/**
+ * Checks if an object is a valid Zepsh element.
+ * @param {any} object - The object to check.
+ * @returns {boolean} True if the object is a valid element.
+ */
+export function isValidElement(object) {
+  return object && typeof object === "object" && object.$$typeof === Symbol.for("zepsh.element");
+}
+
+/**
+ * Creates a ref object.
+ * @returns {Object} A ref object with a current property.
+ */
+export function createRef() {
+  return { current: null };
 }
 
 /** @type {string} Fragment component identifier. */
@@ -157,5 +197,22 @@ export function ViewTransition({ children }) {
       }, 0);
     }
   }
+  return children;
+}
+
+/**
+ * Activity component for managing visibility in concurrent rendering.
+ * @param {Object} props - The component props.
+ * @param {string} props.mode - The visibility mode ("visible" or "hidden").
+ * @param {Array} props.children - The child elements.
+ * @returns {Array|null} The children or null based on mode.
+ */
+export function Activity({ mode, children }) {
+  const fiber = globalState.wipFiber;
+  if (mode === "hidden") {
+    fiber.hidden = true; // Mark fiber as hidden, preserve state
+    return null;
+  }
+  fiber.hidden = false;
   return children;
 }
