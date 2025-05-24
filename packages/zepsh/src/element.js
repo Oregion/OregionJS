@@ -34,7 +34,7 @@ export function createElement(type, props, ...children) {
       ...props,
       children: children.map((child) => (typeof child === "object" ? child : createTextElement(child))),
     },
-    $$typeof: Symbol.for("zepsh.element"),
+    $$typeof: Symbol.for("didact.element"),
   };
 }
 
@@ -47,7 +47,7 @@ export function createElement(type, props, ...children) {
  */
 export function cloneElement(element, props, ...children) {
   if (!isValidElement(element)) {
-    throw new Error("cloneElement expects a valid Zepsh element");
+    throw new Error("cloneElement expects a valid Didact element");
   }
   return {
     type: element.type,
@@ -56,17 +56,17 @@ export function cloneElement(element, props, ...children) {
       ...props,
       children: children.length ? children.map((child) => (typeof child === "object" ? child : createTextElement(child))) : element.props.children,
     },
-    $$typeof: Symbol.for("zepsh.element"),
+    $$typeof: Symbol.for("didact.element"),
   };
 }
 
 /**
- * Checks if an object is a valid Zepsh element.
+ * Checks if an object is a valid Didact element.
  * @param {any} object - The object to check.
  * @returns {boolean} True if the object is a valid element.
  */
 export function isValidElement(object) {
-  return object && typeof object === "object" && object.$$typeof === Symbol.for("zepsh.element");
+  return object && typeof object === "object" && object.$$typeof === Symbol.for("didact.element");
 }
 
 /**
@@ -89,9 +89,11 @@ export const Fragment = "FRAGMENT";
  */
 export function Suspense({ fallback, children }) {
   const fiber = globalState.wipFiber;
-  if (fiber.suspended) {
+  if (fiber.suspended || fiber.suspenseCache?.pending) {
+    fiber.suspenseCache = fiber.suspenseCache || { pending: false };
     return fallback;
   }
+  fiber.suspenseCache = { pending: false };
   return children;
 }
 

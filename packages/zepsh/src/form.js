@@ -2,7 +2,8 @@
  * @module zepsh/form
  * Form scope utilities for Zepsh.
  */
-import { createContext, useContext, useActionState } from "./hooks";
+import { createContext } from "./context";
+import { useContext, useActionState } from "./hooks";
 
 /**
  * Creates a form scope for managing form state and actions.

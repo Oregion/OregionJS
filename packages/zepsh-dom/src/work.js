@@ -27,7 +27,7 @@ export function commitRoot() {
  * @param {Object} fiber - The fiber to commit.
  */
 function commitWork(fiber) {
-  if (!fiber || fiber.skipRender) return;
+  if (!fiber || fiber.skipRender || fiber.hidden) return;
 
   let domParentFiber = fiber.parent;
   while (domParentFiber && !domParentFiber.dom) domParentFiber = domParentFiber.parent;
@@ -55,7 +55,7 @@ function commitWork(fiber) {
  * @param {string} effectType - The type of effect to run (insertion, layout, effect).
  */
 function runEffects(fiber, effectType) {
-  if (!fiber || fiber.skipRender) return;
+  if (!fiber || fiber.skipRender || fiber.hidden) return;
 
   if (fiber.hooks) {
     fiber.hooks.forEach((hook) => {
@@ -103,8 +103,10 @@ export function workLoop(deadline) {
     } catch (error) {
       if (error instanceof Promise) {
         globalState.nextUnitOfWork.suspended = true;
+        globalState.nextUnitOfWork.suspenseCache = { pending: true };
         error.then(() => {
           globalState.nextUnitOfWork.suspended = false;
+          globalState.nextUnitOfWork.suspenseCache.pending = false;
           scheduleTask(() => {
             globalState.wipRoot = {
               dom: globalState.currentRoot.dom,
@@ -115,7 +117,7 @@ export function workLoop(deadline) {
             globalState.deletions = [];
           }, 0); // High priority
         });
-        globalState.nextUnitOfWork = null; // Pause until promise resolves
+        globalState.nextUnitOfWork = globalState.nextUnitOfWork.sibling || globalState.nextUnitOfWork.parent;
       } else {
         const boundary = findErrorBoundary(globalState.nextUnitOfWork, error);
         if (boundary) {
@@ -145,7 +147,7 @@ scheduleTask(() => workLoop({ timeRemaining: () => 50 }), 1);
  * @returns {Object|null} The next fiber to process.
  */
 function performUnitOfWork(fiber) {
-  if (fiber.skipRender) {
+  if (fiber.skipRender || fiber.hidden) {
     if (fiber.child) return fiber.child;
     let nextFiber = fiber;
     while (nextFiber) {
@@ -225,6 +227,7 @@ function updateFunctionComponent(fiber) {
   } catch (error) {
     if (error instanceof Promise) {
       fiber.suspended = true;
+      fiber.suspenseCache = { pending: true };
       throw error; // Let workLoop handle suspense
     }
     const boundary = findErrorBoundary(fiber, error);

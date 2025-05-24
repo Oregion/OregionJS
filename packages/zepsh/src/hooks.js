@@ -4,18 +4,24 @@
  */
 import { globalState } from "./state";
 import { scheduleTask } from "./scheduler";
+import { createContext } from "./context";
 
 /**
  * Creates a hook object with consistent structure.
  * @param {Object} options - Hook options (state, deps, etc.).
  * @returns {Object} The hook object.
  */
-function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref }) {
-  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref };
+function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref, cache }) {
+  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref, cache };
   globalState.wipFiber.hooks.push(hook);
   globalState.hookIndex++;
   return hook;
 }
+
+/**
+ * Context for tracking form status.
+ */
+const FormStatusContext = createContext(null);
 
 /**
  * Manages state for a component.
@@ -149,18 +155,29 @@ export function useImperativeHandle(ref, createHandle, deps) {
 }
 
 /**
- * Memoizes a value based on dependencies.
+ * Memoizes a value based on dependencies with optional caching.
  * @param {Function} factory - The factory function to compute the value.
  * @param {Array} deps - Dependency array.
+ * @param {number} [cacheSize=1] - Number of cached values to store.
  * @returns {any} The memoized value.
  */
-export function useMemo(factory, deps) {
+export function useMemo(factory, deps, cacheSize = 1) {
   const oldHook = globalState.wipFiber.alternate?.hooks?.[globalState.hookIndex];
   const hasChanged = !oldHook || !oldHook.deps || !deps || deps.some((dep, i) => !Object.is(dep, oldHook.deps[i]));
-  return createHook({
+  const hook = createHook({
     deps,
     value: hasChanged ? factory() : oldHook.value,
-  }).value;
+    cache: oldHook ? oldHook.cache : [],
+  });
+
+  if (hasChanged) {
+    hook.cache.push(hook.value);
+    if (hook.cache.length > cacheSize) {
+      hook.cache.shift();
+    }
+  }
+
+  return hook.value;
 }
 
 /**
@@ -291,6 +308,7 @@ export function useActionState(action, initialState) {
 
   const dispatchAction = async (...args) => {
     hook.pending = true;
+    FormStatusContext._currentValue = { pending: true, data: args };
     try {
       const result = await action(state, ...args);
       dispatch(result);
@@ -298,10 +316,24 @@ export function useActionState(action, initialState) {
       dispatch({ error });
     } finally {
       hook.pending = false;
+      FormStatusContext._currentValue = { pending: false, data: null };
     }
   };
 
   return [state, dispatchAction, hook.pending];
+}
+
+/**
+ * Provides form submission status.
+ * @returns {Object} The form status (pending, data).
+ * @throws {Error} If used outside a form context.
+ */
+export function useFormStatus() {
+  const status = useContext(FormStatusContext);
+  if (!status) {
+    throw new Error("useFormStatus must be used within a form context");
+  }
+  return status;
 }
 
 /**
@@ -446,6 +478,27 @@ export function startTransition(callback) {
 }
 
 /**
+ * Caches a resource for suspense.
+ * @param {Function} resourceFn - The function to compute the resource.
+ * @returns {any} The cached resource.
+ */
+export function cache(resourceFn) {
+  const cacheMap = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cacheMap.has(key)) {
+      return cacheMap.get(key);
+    }
+    const promise = resourceFn(...args).then((result) => {
+      cacheMap.set(key, result);
+      return result;
+    });
+    cacheMap.set(key, promise);
+    throw promise;
+  };
+}
+
+/**
  * Persists state in localStorage.
  * @param {string} key - The storage key.
  * @param {any} initialValue - The initial value.
@@ -466,15 +519,15 @@ export function useLocalStorage(key, initialValue) {
     try {
       window.localStorage.setItem(key, JSON.stringify(state));
     } catch (error) {
-      console.error(`Error saving to localStorage: ${error}`);
+      console.error("Failed to save to localStorage:", error);
     }
-  }, [state]);
+  }, [key, state]);
 
   return [state, setState];
 }
 
 /**
- * Debounces a value to prevent frequent updates.
+ * Debounces a value.
  * @param {any} value - The value to debounce.
  * @param {number} delay - The debounce delay in milliseconds.
  * @returns {any} The debounced value.
@@ -493,17 +546,18 @@ export function useDebounce(value, delay) {
 }
 
 /**
- * Fetches data with suspense support.
+ * Fetches data with suspense and caching support.
  * @param {string} url - The URL to fetch.
  * @param {Object} [options] - Fetch options.
+ * @param {string} [options.cacheKey] - Cache key for deduplication.
  * @returns {any} The fetched data.
  */
 export function useFetch(url, options = {}) {
-  const cache = useMemo(() => new Map(), []);
-  const cacheKey = JSON.stringify({ url, options });
+  const cacheKey = options.cacheKey || url;
+  const cached = cache.get(cacheKey);
 
-  if (cache.has(cacheKey)) {
-    return cache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const promise = fetch(url, options)
@@ -516,30 +570,163 @@ export function useFetch(url, options = {}) {
       return data;
     });
 
-  promise.catch((error) => {
-    cache.set(cacheKey, { error });
-  });
-
-  throw promise; // Trigger suspense
+  cache.set(cacheKey, promise);
+  throw promise;
 }
 
 /**
- * Caches a resource for suspense.
- * @param {Function} resourceFn - The function to compute the resource.
- * @returns {any} The cached resource.
+ * Tracks window size.
+ * @returns {{ width: number, height: number }} The window dimensions.
  */
-export function cache(resourceFn) {
-  const cacheMap = new Map();
-  return (...args) => {
-    const key = JSON.stringify(args);
-    if (cacheMap.has(key)) {
-      return cacheMap.get(key);
+export function useWindowSize() {
+  const [size, setSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return size;
+}
+
+/**
+ * Runs a callback at a specified interval.
+ * @param {Function} callback - The callback to run.
+ * @param {number} delay - The interval delay in milliseconds.
+ */
+export function useInterval(callback, delay) {
+  const savedCallback = useRefCleanup(null, () => clearInterval(savedCallback.current));
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    if (delay !== null && delay >= 0) {
+      const id = setInterval(() => savedCallback.current(), delay);
+      savedCallback.current = id;
+      return () => clearInterval(id);
     }
-    const promise = resourceFn(...args).then((result) => {
-      cacheMap.set(key, result);
-      return result;
-    });
-    cacheMap.set(key, promise);
-    throw promise;
+  }, [delay]);
+}
+
+/**
+ * Manages form state and validation.
+ * @param {Object} initialValues - Initial form values.
+ * @param {Object} [options] - Form options.
+ * @param {Function} [options.validate] - Validation function.
+ * @returns {Object} Form state, handlers, and utilities.
+ */
+export function useForm(initialValues, options = {}) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    if (options.validate) {
+      const newErrors = options.validate({ ...values, [name]: value });
+      setErrors(newErrors);
+    }
   };
+
+  const handleSubmit = (callback) => async (e) => {
+    e.preventDefault();
+    if (options.validate) {
+      const newErrors = options.validate(values);
+      setErrors(newErrors);
+      if (Object.keys(newErrors).length) return;
+    }
+    await callback(values);
+  };
+
+  const resetForm = () => {
+    setValues(initialValues);
+    setErrors({});
+    setTouched({});
+  };
+
+  return {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleSubmit,
+    resetForm,
+  };
+}
+
+/**
+ * Tracks media query matches.
+ * @param {string} query - The media query (e.g., "(min-width: 768px)").
+ * @returns {boolean} Whether the media query matches.
+ */
+export function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const listener = () => setMatches(media.matches);
+    media.addListener(listener);
+    return () => media.removeListener(listener);
+  }, [query]);
+
+  return matches;
+}
+
+/**
+ * Toggles a boolean state.
+ * @param {boolean} initialValue - The initial toggle state.
+ * @returns {[boolean, Function, Function, Function]} The state, toggle, setTrue, and setFalse functions.
+ */
+export function useToggle(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+  const toggle = () => setValue((prev) => !prev);
+  const setTrue = () => setValue(true);
+  const setFalse = () => setValue(false);
+  return [value, toggle, setTrue, setFalse];
+}
+
+/**
+ * Tracks the previous value of a state or prop.
+ * @param {any} value - The value to track.
+ * @returns {any} The previous value.
+ */
+export function usePrevious(value) {
+  const ref = useRefCleanup(null, () => {});
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+
+/**
+ * Manages localization and formatting.
+ * @param {Object} translations - Translation strings (e.g., { en: { greet: "Hello" } }).
+ * @param {string} [defaultLocale="en"] - The default locale.
+ * @returns {Object} Translation function, locale, and setter.
+ */
+export function useLocale(translations, defaultLocale = "en") {
+  const [locale, setLocale] = useState(defaultLocale);
+
+  const t = (key, params = {}) => {
+    const translation = translations[locale]?.[key] || key;
+    if (typeof translation === "function") {
+      return translation(params);
+    }
+    return Object.entries(params).reduce((str, [k, v]) => str.replace(`{${k}}`, v), translation);
+  };
+
+  return { t, locale, setLocale };
 }
