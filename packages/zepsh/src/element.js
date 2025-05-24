@@ -69,6 +69,14 @@ export function isValidElement(object) {
   return object && typeof object === "object" && object.$$typeof === Symbol.for("zepsh.element");
 }
 
+/**
+ * Creates a ref object.
+ * @returns {Object} A ref object with a current property.
+ */
+export function createRef() {
+  return { current: null };
+}
+
 /** @type {string} Fragment component identifier. */
 export const Fragment = "FRAGMENT";
 
