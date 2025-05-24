@@ -50,9 +50,7 @@ export const Children = {
     if (!Array.isArray(children)) children = [children];
     return children
       .flatMap((child) => {
-        if (child && child.type === "FRAGMENT") {
-          return Children.toArray(child.props.children);
-        }
+        if (child && child.type === "FRAGMENT") return Children.toArray(child.props.children);
         return child;
       })
       .filter(Boolean);
@@ -66,9 +64,7 @@ export const Children = {
    */
   only(children) {
     const normalized = Children.toArray(children);
-    if (normalized.length !== 1) {
-      throw new Error("Children.only expects exactly one child");
-    }
+    if (normalized.length !== 1) throw new Error("Children.only expects exactly one child");
     return normalized[0];
   },
 };

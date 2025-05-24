@@ -34,7 +34,7 @@ export function createElement(type, props, ...children) {
       ...props,
       children: children.map((child) => (typeof child === "object" ? child : createTextElement(child))),
     },
-    $$typeof: Symbol.for("didact.element"),
+    $$typeof: Symbol.for("zepsh.element"),
   };
 }
 
@@ -46,9 +46,7 @@ export function createElement(type, props, ...children) {
  * @returns {Object} The cloned element.
  */
 export function cloneElement(element, props, ...children) {
-  if (!isValidElement(element)) {
-    throw new Error("cloneElement expects a valid Didact element");
-  }
+  if (!isValidElement(element)) throw new Error("cloneElement expects a valid Zepsh element");
   return {
     type: element.type,
     props: {
@@ -56,17 +54,17 @@ export function cloneElement(element, props, ...children) {
       ...props,
       children: children.length ? children.map((child) => (typeof child === "object" ? child : createTextElement(child))) : element.props.children,
     },
-    $$typeof: Symbol.for("didact.element"),
+    $$typeof: Symbol.for("zepsh.element"),
   };
 }
 
 /**
- * Checks if an object is a valid Didact element.
+ * Checks if an object is a valid Zepsh element.
  * @param {any} object - The object to check.
  * @returns {boolean} True if the object is a valid element.
  */
 export function isValidElement(object) {
-  return object && typeof object === "object" && object.$$typeof === Symbol.for("didact.element");
+  return object && typeof object === "object" && object.$$typeof === Symbol.for("zepsh.element");
 }
 
 /**
@@ -106,9 +104,7 @@ export function Suspense({ fallback, children }) {
  */
 export function ErrorBoundary({ fallback, children }) {
   const fiber = globalState.wipFiber;
-  if (fiber.error) {
-    return fallback;
-  }
+  if (fiber.error) return fallback;
   return children;
 }
 
@@ -149,9 +145,7 @@ export function Profiler({ id, onRender, children }) {
     const result = children;
     const actualDuration = performance.now() - startTime;
     logProfile(id, phase, actualDuration, startTime);
-    if (onRender) {
-      onRender(id, phase, actualDuration, startTime, fiber._debugName);
-    }
+    if (onRender) onRender(id, phase, actualDuration, startTime, fiber._debugName);
     return result;
   }
   return children;
@@ -166,7 +160,7 @@ export function Profiler({ id, onRender, children }) {
 export function StrictMode({ children }) {
   if (process.env.NODE_ENV !== "production") {
     const fiber = globalState.wipFiber;
-    fiber.strictMode = true; // Mark fiber for double-rendering in dev
+    fiber.strictMode = true;
   }
   return children;
 }
@@ -189,7 +183,6 @@ export function ViewTransition({ children }) {
       globalState.deletions = [];
     });
   } else {
-    // Fallback: simple fade animation
     const fiber = globalState.wipFiber;
     if (fiber.dom) {
       fiber.dom.style.transition = "opacity 0.3s";
@@ -212,7 +205,7 @@ export function ViewTransition({ children }) {
 export function Activity({ mode, children }) {
   const fiber = globalState.wipFiber;
   if (mode === "hidden") {
-    fiber.hidden = true; // Mark fiber as hidden, preserve state
+    fiber.hidden = true;
     return null;
   }
   fiber.hidden = false;

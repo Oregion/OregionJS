@@ -32,9 +32,7 @@ export function createFormScope() {
    */
   function useForm() {
     const context = useContext(FormContext);
-    if (!context) {
-      throw new Error("useForm must be used within a FormScope Provider");
-    }
+    if (!context) throw new Error("useForm must be used within a FormScope Provider");
     return context;
   }
 

@@ -12,9 +12,7 @@ export function captureOwnerStack(fiber) {
   const stack = [];
   let current = fiber;
   while (current) {
-    if (typeof current.type === "function") {
-      stack.push(current.type.name || "Anonymous");
-    }
+    if (typeof current.type === "function") stack.push(current.type.name || "Anonymous");
     current = current.parent;
   }
   return stack.reverse().join(" > ");
@@ -28,11 +26,8 @@ export function captureOwnerStack(fiber) {
 export function mergeRefs(refs) {
   return (node) => {
     refs.forEach((ref) => {
-      if (typeof ref === "function") {
-        ref(node);
-      } else if (ref && typeof ref === "object" && "current" in ref) {
-        ref.current = node;
-      }
+      if (typeof ref === "function") ref(node);
+      else if (ref && typeof ref === "object" && "current" in ref) ref.current = node;
     });
   };
 }

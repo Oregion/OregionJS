@@ -41,7 +41,7 @@ export function lazy(factory) {
         }
       );
     }
-    throw promise; // Trigger suspense
+    throw promise;
   };
 }
 

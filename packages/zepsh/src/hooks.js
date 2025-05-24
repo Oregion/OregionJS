@@ -5,6 +5,7 @@
 import { globalState } from "./state";
 import { scheduleTask } from "./scheduler";
 import { createContext } from "./context";
+import { cache } from "./cache";
 
 /**
  * Creates a hook object with consistent structure.
@@ -149,9 +150,7 @@ export function useImperativeHandle(ref, createHandle, deps) {
     deps,
     value: hasChanged ? createHandle() : oldHook.value,
   });
-  if (hasChanged && ref) {
-    ref.current = hook.value;
-  }
+  if (hasChanged && ref) ref.current = hook.value;
 }
 
 /**
@@ -167,16 +166,12 @@ export function useMemo(factory, deps, cacheSize = 1) {
   const hook = createHook({
     deps,
     value: hasChanged ? factory() : oldHook.value,
-    cache: oldHook ? oldHook.cache : [],
+    cache: oldHook ? oldHook.cache : cacheSize > 0 ? [] : [],
   });
-
-  if (hasChanged) {
+  if (hasChanged && cacheSize > 0) {
     hook.cache.push(hook.value);
-    if (hook.cache.length > cacheSize) {
-      hook.cache.shift();
-    }
+    if (hook.cache.length > cacheSize) hook.cache.shift();
   }
-
   return hook.value;
 }
 
@@ -330,9 +325,7 @@ export function useActionState(action, initialState) {
  */
 export function useFormStatus() {
   const status = useContext(FormStatusContext);
-  if (!status) {
-    throw new Error("useFormStatus must be used within a form context");
-  }
+  if (!status) throw new Error("useFormStatus must be used within a form context");
   return status;
 }
 
@@ -451,13 +444,9 @@ export function useErrorBoundary(errorHandler) {
  * @returns {any} The resource value.
  */
 export function use(resource) {
-  if (resource instanceof Promise) {
-    throw resource; // Trigger suspense
-  }
-  if (resource && resource._currentValue !== undefined) {
-    return useContext(resource); // Handle context
-  }
-  return resource; // Direct value
+  if (resource instanceof Promise) throw resource;
+  if (resource && resource._currentValue !== undefined) return useContext(resource);
+  return resource;
 }
 
 /**
@@ -474,7 +463,7 @@ export function startTransition(callback) {
     };
     globalState.nextUnitOfWork = globalState.wipRoot;
     globalState.deletions = [];
-  }, 1); // Normal priority
+  }, 1);
 }
 
 /**
@@ -482,13 +471,11 @@ export function startTransition(callback) {
  * @param {Function} resourceFn - The function to compute the resource.
  * @returns {any} The cached resource.
  */
-export function cache(resourceFn) {
+export function createCache(resourceFn) {
   const cacheMap = new Map();
   return (...args) => {
     const key = JSON.stringify(args);
-    if (cacheMap.has(key)) {
-      return cacheMap.get(key);
-    }
+    if (cacheMap.has(key)) return cacheMap.get(key);
     const promise = resourceFn(...args).then((result) => {
       cacheMap.set(key, result);
       return result;
@@ -556,9 +543,7 @@ export function useFetch(url, options = {}) {
   const cacheKey = options.cacheKey || url;
   const cached = cache.get(cacheKey);
 
-  if (cached) {
-    return cached;
-  }
+  if (cached) return cached;
 
   const promise = fetch(url, options)
     .then((res) => {
@@ -585,9 +570,7 @@ export function useWindowSize() {
   });
 
   useEffect(() => {
-    const handleResize = () => {
-      setSize({ width: window.innerWidth, height: window.innerHeight });
-    };
+    const handleResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -722,9 +705,7 @@ export function useLocale(translations, defaultLocale = "en") {
 
   const t = (key, params = {}) => {
     const translation = translations[locale]?.[key] || key;
-    if (typeof translation === "function") {
-      return translation(params);
-    }
+    if (typeof translation === "function") return translation(params);
     return Object.entries(params).reduce((str, [k, v]) => str.replace(`{${k}}`, v), translation);
   };
 

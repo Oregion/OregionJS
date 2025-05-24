@@ -9,5 +9,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
     getRoot: () => globalState.currentRoot,
     getWip: () => globalState.wipRoot,
     getHooks: () => globalState.wipFiber?.hooks || [],
+    profiles: new Map(),
   };
 }
