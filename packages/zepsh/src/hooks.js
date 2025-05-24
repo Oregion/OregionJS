@@ -10,8 +10,8 @@ import { scheduleTask } from "./scheduler";
  * @param {Object} options - Hook options (state, deps, etc.).
  * @returns {Object} The hook object.
  */
-function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource }) {
-  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource };
+function createHook({ state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref }) {
+  const hook = { state, deps, value, effect, cleanup, dispatch, id, context, pending, optimistic, error, resource, ref };
   globalState.wipFiber.hooks.push(hook);
   globalState.hookIndex++;
   return hook;
@@ -102,7 +102,32 @@ export function useInsertionEffect(callback, deps) {
  */
 export function useRef(initial) {
   const oldHook = globalState.wipFiber.alternate?.hooks?.[globalState.hookIndex];
-  return createHook({ current: oldHook ? oldHook.current : initial }).current;
+  return createHook({ ref: oldHook ? oldHook.ref : { current: initial } }).ref;
+}
+
+/**
+ * Creates a mutable reference with cleanup logic.
+ * @param {any} initial - The initial value.
+ * @param {Function} cleanupFn - Function to run on unmount or ref change.
+ * @returns {Object} The reference object.
+ */
+export function useRefCleanup(initial, cleanupFn) {
+  const oldHook = globalState.wipFiber.alternate?.hooks?.[globalState.hookIndex];
+  const ref = createHook({
+    ref: oldHook ? oldHook.ref : { current: initial },
+    cleanup: oldHook?.cleanup,
+  }).ref;
+
+  useEffect(() => {
+    return () => {
+      if (ref.current !== null) {
+        cleanupFn(ref.current);
+        ref.current = null;
+      }
+    };
+  }, [ref, cleanupFn]);
+
+  return ref;
 }
 
 /**
