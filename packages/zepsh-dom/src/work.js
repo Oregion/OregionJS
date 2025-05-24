@@ -246,5 +246,14 @@ function updateFunctionComponent(fiber) {
  */
 function updateHostComponent(fiber) {
   if (!fiber.dom) fiber.dom = createDom(fiber);
+  if (fiber.props.ref) {
+    // Assign ref to DOM node
+    const ref = fiber.props.ref;
+    if (typeof ref === "function") {
+      ref(fiber.dom);
+    } else if (ref && typeof ref === "object" && "current" in ref) {
+      ref.current = fiber.dom;
+    }
+  }
   reconcileChildren(fiber, fiber.props.children);
 }
